@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Скачать данные пользователей</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .download-section {
+            max-width: 600px;
+            margin: 50px auto;
+            text-align: center;
+        }
+        
+        .download-btn {
+            margin: 10px;
+            min-width: 200px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Скачать данные</h1>
+        </header>
+
+        <main>
+            <section class="form-section download-section">
+                <h2>Список пользователей</h2>
+                
+                <div class="info-box">
+                    <p>Скачайте или посмотрите список пользователей в формате JSON</p>
+                </div>
+                
+                <button id="downloadJson" class="btn btn-primary download-btn">
+                    📥 Скачать JSON
+                </button>
+                
+                <button id="viewJson" class="btn btn-secondary download-btn">
+                    👁️ Просмотреть JSON
+                </button>
+                
+                <div id="jsonPreview" style="display: none; margin-top: 30px;">
+                    <h3>Предварительный просмотр:</h3>
+                    <pre id="jsonContent" style="background: #f4f4f4; padding: 20px; border-radius: 5px; text-align: left; overflow-x: auto;"></pre>
+                </div>
+                
+                <a href="/" class="back-link">← Вернуться на главную</a>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Mini API. Все права защищены.</p>
+        </footer>
+    </div>
+
+    <script src="/js/download.js"></script>
+</body>
+</html>
