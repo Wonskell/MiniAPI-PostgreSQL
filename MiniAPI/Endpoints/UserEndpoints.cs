@@ -1,5 +1,5 @@
-using System.Text.Json;
-using MiniAPI.Models;
+using MiniAPI.DTOs;
+using Npgsql;
 
 namespace MiniAPI.Endpoints;
 
@@ -7,114 +7,62 @@ public static class UserEndpoints
 {
     public static void MapUserEndpoints(this WebApplication app)
     {
-        var userGroup = app.MapGroup("/user").WithTags("Users");
-
-        userGroup.MapGet("/", (string? name, UserManager manager) =>
+        var users = app.MapGroup("/user").WithTags("Users");
+        users.MapGet("/", (string? name) => Results.Ok(new UserResponse
         {
-            var response = manager.GetGreeting(name);
-            return Results.Json(response);
-        });
+            Name = string.IsNullOrWhiteSpace(name) ? "Гость" : name.Trim(),
+            Message = $"Привет, {(string.IsNullOrWhiteSpace(name) ? "Гость" : name.Trim())}!"
+        }));
 
-        userGroup.MapPost("/", async (HttpContext ctx, UserManager manager) =>
+        users.MapPost("/", async (CreateUserRequest request, UserManager manager, CancellationToken ct) =>
         {
-            if (!ctx.Request.HasJsonContentType())
-                return Results.BadRequest(new { error = "Expected JSON" });
-
             try
             {
-                var data = await ctx.Request.ReadFromJsonAsync<User>();
-                
-                if (data == null || string.IsNullOrWhiteSpace(data.Name))
-                    return Results.BadRequest(new { error = "Name is required" });
-
-                var user = manager.AddUser(data.Name, data.Age);
-                return Results.Json(new
-                {
-                    name = user.Name,
-                    age = user.Age,
-                    received = user.Name
-                });
+                var user = await manager.AddUserAsync(request, ct);
+                return Results.Created($"/user/{user.Id}", user);
             }
-            catch (ArgumentException ex)
-            {
-                return Results.BadRequest(new { error = ex.Message });
-            }
-            catch (JsonException)
-            {
-                return Results.BadRequest(new { error = "Invalid JSON" });
-            }
+            catch (ArgumentException ex) { return Results.BadRequest(new { error = ex.Message }); }
+            catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+            { return Results.BadRequest(new { error = "Выбранный отдел не существует." }); }
         });
 
-        userGroup.MapGet("/all", (UserManager manager) =>
-        {
-            var allUsers = manager.GetAllUsers();
-            return Results.Json(allUsers);
-        });
-
-        userGroup.MapGet("/sorted", (UserManager manager) =>
-        {
-            var sortedUsers = manager.GetUsersSortedByAge();
-            return Results.Json(sortedUsers);
-        });
-
-        userGroup.MapGet("/filter", (int? minAge, int? maxAge, UserManager manager) =>
+        users.MapGet("/all", async (UserManager manager, CancellationToken ct) => Results.Ok(await manager.GetAllAsync(ct)));
+        users.MapGet("/sorted", async (UserManager manager, CancellationToken ct) => Results.Ok(await manager.GetSortedAsync(ct)));
+        users.MapGet("/filter", async (int? minAge, int? maxAge, UserManager manager, CancellationToken ct) =>
         {
             var min = minAge ?? 0;
             var max = maxAge ?? 150;
-            var filtered = manager.GetUsersByAgeRange(min, max);
-            return Results.Json(filtered);
+            if (min < 0 || max > 150 || min > max)
+                return Results.BadRequest(new { error = "Задайте диапазон от 0 до 150; нижняя граница не должна превышать верхнюю." });
+            return Results.Ok(await manager.GetFilteredAsync(min, max, ct));
         });
 
-        userGroup.MapGet("/search", (string name, UserManager manager) =>
+        users.MapGet("/search", async (string name, UserManager manager, CancellationToken ct) =>
         {
-            var user = manager.FindUserByName(name);
-            if (user == null)
-                return Results.NotFound(new { error = "User not found" });
-            
-            return Results.Json(user);
+            if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > 100)
+                return Results.BadRequest(new { error = "Укажите имя длиной от 1 до 100 символов." });
+            var user = await manager.FindByNameAsync(name, ct);
+            return user is null ? Results.NotFound(new { error = "Пользователь не найден." }) : Results.Ok(user);
         });
-
-        userGroup.MapGet("/{id:guid}", (Guid id, UserManager manager) =>
+        users.MapGet("/{id:guid}", async (Guid id, UserManager manager, CancellationToken ct) =>
         {
-            var user = manager.FindUserById(id);
-            if (user == null)
-                return Results.NotFound(new { error = "User not found" });
-            
-            return Results.Json(user);
+            var user = await manager.FindByIdAsync(id, ct);
+            return user is null ? Results.NotFound(new { error = "Пользователь не найден." }) : Results.Ok(user);
         });
-
-        userGroup.MapDelete("/{id:guid}", (Guid id, UserManager manager) =>
-        {
-            var deleted = manager.DeleteUser(id);
-            if (!deleted)
-                return Results.NotFound(new { error = "User not found" });
-            
-            return Results.Ok(new { message = "User deleted", id });
-        });
-
-        userGroup.MapGet("/stats", (UserManager manager) =>
-        {
-            var total = manager.GetTotalUsers();
-            var avgAge = manager.GetAverageAge();
-            var oldest = manager.GetOldestUser();
-            var youngest = manager.GetYoungestUser();
-            
-            return Results.Json(new
-            {
-                totalUsers = total,
-                averageAge = Math.Round(avgAge, 1),
-                oldestUser = oldest?.Name,
-                youngestUser = youngest?.Name
-            });
-        });
-
-        userGroup.MapGet("/recent", (int? count, UserManager manager) =>
+        users.MapDelete("/{id:guid}", async (Guid id, UserManager manager, CancellationToken ct) =>
+            await manager.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound(new { error = "Пользователь не найден." }));
+        users.MapGet("/stats", async (UserManager manager, CancellationToken ct) => Results.Ok(await manager.GetStatisticsAsync(ct)));
+        users.MapGet("/recent", async (int? count, UserManager manager, CancellationToken ct) =>
         {
             var limit = count ?? 5;
-            var recentUsers = manager.GetRecentUsers(limit);
-            return Results.Json(recentUsers);
+            if (limit is < 1 or > 100)
+                return Results.BadRequest(new { error = "Количество должно быть от 1 до 100." });
+            return Results.Ok(await manager.GetRecentAsync(limit, ct));
         });
-
+        app.MapGet("/departments", async (UserManager manager, CancellationToken ct) => Results.Ok(await manager.GetDepartmentsAsync(ct)))
+            .WithTags("Departments");
+        app.MapGet("/departments/stats", async (UserManager manager, CancellationToken ct) => Results.Ok(await manager.GetDepartmentStatisticsAsync(ct)))
+            .WithTags("Departments");
         app.MapGet("/old", () => Results.Redirect("/user"));
         app.MapGet("/download", () => Results.Redirect("/download.html"));
     }

@@ -364,3 +364,9 @@ FodyWeavers.xsd
 
 # User data files
 users_data.json
+
+# Local settings and database backups
+.vscode/
+.env
+*.dump
+appsettings.Local.json

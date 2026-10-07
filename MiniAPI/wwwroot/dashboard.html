@@ -3,53 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Панель управления</title>
+    <title>Пользователи — MiniAPI</title>
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Панель управления пользователями</h1>
-            <div style="margin-top: 15px;">
-                <a href="/" style="color: white; text-decoration: none; font-size: 0.9rem;">← Выход</a>
-            </div>
-        </header>
-
-        <main>
-            <section class="form-section">
-                <h2>Регистрация нового пользователя</h2>
-                <form id="registrationForm">
-                    <div class="form-group">
-                        <label for="name">Имя:</label>
-                        <input type="text" id="name" name="name" required placeholder="Введите ваше имя">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="age">Возраст:</label>
-                        <input type="number" id="age" name="age" required min="1" max="150" placeholder="Введите ваш возраст">
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+    <header class="site-header"><a class="brand" href="/">MiniAPI<span>Справочник пользователей</span></a>
+        <nav aria-label="Основная навигация"><a href="/dashboard.html">Пользователи</a><a href="/download.html">Экспорт</a></nav>
+    </header>
+    <main>
+        <div class="page-heading"><div><p class="eyebrow">Справочник</p><h1>Пользователи</h1></div><a class="btn" href="/download.html">Экспорт JSON</a></div>
+        <div class="workspace">
+            <section class="panel add-panel">
+                <h2>Добавить пользователя</h2>
+                <form id="userForm">
+                    <label for="name">Имя</label><input id="name" name="name" required maxlength="100" autocomplete="name" placeholder="Например, Анна Смирнова">
+                    <label for="age">Возраст</label><input id="age" name="age" type="number" required min="0" max="150" step="1" placeholder="От 0 до 150">
+                    <label for="department">Отдел</label><select id="department" name="department"><option value="">Без отдела</option></select>
+                    <p id="departmentHint" class="muted" role="status"></p>
+                    <button id="addUser" class="btn btn-primary" type="submit">Добавить</button>
                 </form>
-                
-                <div id="message" class="message"></div>
+                <p id="message" class="message" role="status" aria-live="polite" hidden></p>
             </section>
-
-            <section class="users-section">
-                <h2>Зарегистрированные пользователи</h2>
-                <div style="margin-bottom: 20px;">
-                    <button id="loadUsers" class="btn btn-secondary">Загрузить список</button>
-                    <a href="/download" class="btn btn-secondary" style="display: inline-block; text-decoration: none; margin-left: 10px;">📥 Скачать JSON</a>
-                </div>
-                <div id="usersList" class="users-list"></div>
+            <section class="panel list-panel">
+                <div class="section-heading"><h2>Список</h2><button id="refresh" class="btn" type="button">Обновить</button></div>
+                <form id="filterForm" class="filters">
+                    <div><label for="searchName">Полное имя</label><input id="searchName" maxlength="100" placeholder="Поиск без учёта регистра"></div>
+                    <div><label for="minAge">Возраст от</label><input id="minAge" type="number" min="0" max="150" step="1"></div>
+                    <div><label for="maxAge">до</label><input id="maxAge" type="number" min="0" max="150" step="1"></div>
+                    <div><label for="sort">Порядок</label><select id="sort"><option value="recent">Сначала новые</option><option value="age">По возрасту</option></select></div>
+                    <button class="btn" type="submit">Применить</button>
+                    <button id="resetFilters" class="btn" type="button">Сбросить</button>
+                </form>
+                <p class="muted">Поиск по имени возвращает первое полное совпадение. Возраст и порядок применяются к результату.</p>
+                <p id="listStatus" class="muted" role="status" aria-live="polite"></p>
+                <div class="table-scroll"><table><thead><tr><th>Имя</th><th>Возраст</th><th>Отдел</th><th><span class="sr-only">Действия</span></th></tr></thead><tbody id="usersList"></tbody></table></div>
             </section>
-        </main>
-
-        <footer>
-            <p>&copy; 2026 Mini API. Все права защищены.</p>
-        </footer>
-    </div>
-
-    <script src="/js/app.js"></script>
+        </div>
+        <section class="panel statistics"><div class="section-heading"><h2>Статистика</h2><p id="summary" class="muted" role="status"></p></div>
+            <div class="table-scroll"><table><thead><tr><th>Отдел</th><th>Пользователи</th><th>Средний возраст</th></tr></thead><tbody id="departmentStats"></tbody></table></div>
+            <p class="muted">Общее количество включает пользователей без отдела. Таблица показывает только назначенные отделы.</p>
+        </section></main>
+    <footer>MiniAPI · Учебный проект</footer>
+    <script src="/js/app.js" defer></script>
 </body>
 </html>

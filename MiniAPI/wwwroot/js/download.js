@@ -1,53 +1,40 @@
-const API_BASE = '';
+const downloadButton = document.getElementById('downloadJson');
+const previewButton = document.getElementById('viewJson');
+const message = document.getElementById('exportMessage');
 
-// Скачать JSON файл
-document.getElementById('downloadJson').addEventListener('click', async () => {
+async function exportUsers(preview) {
+    downloadButton.disabled = true;
+    previewButton.disabled = true;
+    message.hidden = true;
+    document.getElementById('jsonPreview').hidden = true;
     try {
-        const response = await fetch(`${API_BASE}/user/all`);
-        
-        if (response.ok) {
-            const users = await response.json();
-            
-            // Создаем Blob с JSON данными
-            const blob = new Blob([JSON.stringify(users, null, 2)], { type: 'application/json' });
-            
-            // Создаем ссылку для скачивания
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `users_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            
-            // Очистка
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            alert('Файл успешно скачан!');
+        const response = await fetch('/user/all');
+        if (!response.ok) throw new Error('Не удалось загрузить данные. Попробуйте ещё раз.');
+        const json = JSON.stringify(await response.json(), null, 2);
+        if (preview) {
+            document.getElementById('jsonContent').textContent = json;
+            document.getElementById('jsonPreview').hidden = false;
         } else {
-            alert('Ошибка при загрузке данных');
+            const url = URL.createObjectURL(new Blob([json], { type: 'application/json;charset=utf-8' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'users_' + new Date().toISOString().slice(0, 10) + '.json';
+            document.body.append(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            message.textContent = 'Файл передан браузеру для скачивания.';
+            message.className = 'message success';
+            message.hidden = false;
         }
     } catch (error) {
-        alert(`Ошибка: ${error.message}`);
+        message.textContent = error.message;
+        message.className = 'message error';
+        message.hidden = false;
+    } finally {
+        downloadButton.disabled = false;
+        previewButton.disabled = false;
     }
-});
-
-// Просмотреть JSON
-document.getElementById('viewJson').addEventListener('click', async () => {
-    const preview = document.getElementById('jsonPreview');
-    const content = document.getElementById('jsonContent');
-    
-    try {
-        const response = await fetch(`${API_BASE}/user/all`);
-        
-        if (response.ok) {
-            const users = await response.json();
-            content.textContent = JSON.stringify(users, null, 2);
-            preview.style.display = 'block';
-        } else {
-            alert('Ошибка при загрузке данных');
-        }
-    } catch (error) {
-        alert(`Ошибка: ${error.message}`);
-    }
-});
+}
+downloadButton.addEventListener('click', () => exportUsers(false));
+previewButton.addEventListener('click', () => exportUsers(true));

@@ -3,60 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход в систему</title>
+    <title>Главная — MiniAPI</title>
     <link rel="stylesheet" href="/css/styles.css">
-    <style>
-        .login-section {
-            max-width: 500px;
-            margin: 100px auto;
-            text-align: center;
-        }
-        
-        .login-btn {
-            margin: 15px 0;
-            width: 100%;
-        }
-        
-        .welcome-text {
-            background: #e7f3ff;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            padding: 30px;
-            margin: 30px 0;
-        }
-        
-        .welcome-text h2 {
-            border: none;
-            margin-bottom: 15px;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Система управления пользователями</h1>
-        </header>
-
-        <main>
-            <section class="form-section login-section">
-                <div class="welcome-text">
-                    <h2>Добро пожаловать!</h2>
-                    <p>Простая система для работы с пользователями</p>
-                </div>
-                
-                <a href="/dashboard.html" class="btn btn-primary login-btn">
-                    🚀 Войти
-                </a>
-                
-                <div style="margin-top: 30px; color: #666;">
-                    <p>Регистрация и управление пользователями</p>
-                </div>
-            </section>
-        </main>
-
-        <footer>
-            <p>&copy; 2026 Mini API. Все права защищены.</p>
-        </footer>
-    </div>
+    <header class="site-header"><a class="brand" href="/">MiniAPI<span>Справочник пользователей</span></a>
+        <nav aria-label="Основная навигация"><a href="/dashboard.html">Пользователи</a><a href="/download.html">Экспорт</a></nav>
+    </header>
+    <main>
+        <section class="intro">
+            <p class="eyebrow">Справочник</p>
+            <h1>Пользователи и отделы</h1>
+            <p class="lead">Добавляйте пользователей, находите записи и просматривайте статистику по отделам.</p>
+            <a class="btn btn-primary" href="/dashboard.html">Открыть справочник</a>
+        </section>
+        <section class="feature-grid" aria-label="Возможности">
+            <article class="panel"><h2>Список пользователей</h2><p>Имя, возраст и отдел в одном месте. Поиск по имени и фильтр по возрасту.</p></article>
+            <article class="panel"><h2>Статистика</h2><p>Количество пользователей и средний возраст для каждого отдела.</p></article>
+            <article class="panel"><h2>Экспорт данных</h2><p>Просмотр и скачивание актуального списка в формате JSON.</p></article>
+        </section></main>
+    <footer>MiniAPI · Учебный проект</footer>
+    
 </body>
 </html>
